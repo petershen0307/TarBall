@@ -40,14 +40,14 @@ namespace LibTar
     private:
         bool _finished;
     protected:
-        std::ostream& out;
+        std::iostream& out;
         void _init(void* header);
         void _checksum(void* header);
         void _size(void* header, unsigned long fileSize);
         void _filename(void* header, const char* filename);
         void _endRecord(std::size_t len);
     public:
-        Tar(std::ostream& out);
+        Tar(std::iostream& out);
         virtual ~Tar();
         /** writes 2 empty blocks. Should be always called before closing the Tar file */
         void finish();

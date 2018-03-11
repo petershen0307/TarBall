@@ -64,7 +64,9 @@ void LOCALNS::Tar::_endRecord(std::size_t len)
 }
 
 
-LOCALNS::Tar::Tar(std::ostream& out) :_finished(false), out(out)
+LOCALNS::Tar::Tar(std::iostream& _out)
+    : _finished(false)
+    , out(_out)
 {
     if (sizeof(PosixTarHeader) != 512)
     {
