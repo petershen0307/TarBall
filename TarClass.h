@@ -11,6 +11,8 @@
 
 namespace LibTar
 {
+    static uint64_t decodeTarOctal(char* data, size_t size = 12);
+
     struct PosixTarHeader
     {
         char name[100];
@@ -55,6 +57,9 @@ namespace LibTar
         void put(const char* filename, const char* content);
         void put(const char* filename, const char* content, std::size_t len);
         void putFile(const char* filename, const char* nameInArchive);
+
+        // no prefix supported
+        static void readToFile(const std::string& outputDir, std::istream& in);
     };
 
 }

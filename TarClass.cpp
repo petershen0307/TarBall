@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cerrno>
 #include <ctime>
+#include <fstream>
 #include "TarClass.h"
 namespace LOCALNS = LibTar;
 
@@ -145,4 +146,61 @@ void LOCALNS::Tar::putFile(const char* filename, const char* nameInArchive)
     std::fclose(in);
 
     _endRecord(len);
+}
+
+void LOCALNS::Tar::readToFile(const std::string& outputDir, std::istream& in)
+{
+    char zeroBlock[512];
+    memset(zeroBlock, 0, 512);
+    while (in)
+    {
+        // read tar header
+        PosixTarHeader tarHeader;
+        in.read((char *)(void *)&(tarHeader), sizeof(PosixTarHeader));
+        //When a block with zeroes-only is found, the TAR archive ends here
+        if (memcmp(&tarHeader, zeroBlock, 512) == 0)
+        {
+            THROW("Found TAR end\n");
+            break;
+        }
+        //Normal file
+        if (0 == tarHeader.typeflag)
+        {
+            size_t fileSize = decodeTarOctal(tarHeader.size);
+            char* fileData = new char[fileSize]; //+1: Place a terminal NUL to allow interpreting the file as cstring (you can remove this if unused)
+            in.read(fileData, fileSize);
+            // check file path size
+            std::string filePath(outputDir);
+            filePath.append("\\").append(tarHeader.name);
+            std::fstream out(filePath.c_str(), std::ios::out | std::ios::binary);
+            out.write(fileData, fileSize);
+            delete[] fileData;
+            //In the tar archive, entire 512-byte-blocks are used for each file
+            //Therefore we now have to skip the padded bytes.
+            size_t paddingBytes = (512 - (fileSize % 512)) % 512; //How long the padding to 512 bytes needs to be
+                                                              //Simply ignore the padding
+            in.ignore(paddingBytes);
+        }
+    }
+}
+
+static uint64_t LOCALNS::decodeTarOctal(char* data, size_t size)
+{
+#define ASCII_TO_NUMBER(num) ((num)-48) //Converts an ascii digit to the corresponding number (assuming it is an ASCII digit)
+    unsigned char* currentPtr = (unsigned char*)data + size;
+    uint64_t sum = 0;
+    uint64_t currentMultiplier = 1;
+    //Skip everything after the last NUL/space character
+    //In some TAR archives the size field has non-trailing NULs/spaces, so this is neccessary
+    unsigned char* checkPtr = currentPtr; //This is used to check where the last NUL/space char is
+    for (; checkPtr >= (unsigned char*)data; checkPtr--) {
+        if ((*checkPtr) == 0 || (*checkPtr) == ' ') {
+            currentPtr = checkPtr - 1;
+        }
+    }
+    for (; currentPtr >= (unsigned char*)data; currentPtr--) {
+        sum += ASCII_TO_NUMBER(*currentPtr) * currentMultiplier;
+        currentMultiplier *= 8;
+    }
+    return sum;
 }
