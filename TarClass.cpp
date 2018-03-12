@@ -164,7 +164,7 @@ void LOCALNS::Tar::readToFile(const std::string& outputDir, std::istream& in)
             break;
         }
         //Normal file
-        if (0 == tarHeader.typeflag)
+        if (0 == *(tarHeader.typeflag) || '\0' == *(tarHeader.typeflag))
         {
             size_t fileSize = decodeTarOctal(tarHeader.size);
             char* fileData = new char[fileSize]; //+1: Place a terminal NUL to allow interpreting the file as cstring (you can remove this if unused)

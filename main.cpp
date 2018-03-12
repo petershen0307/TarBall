@@ -16,7 +16,7 @@ int main(int argc, char** argv)
     /* finalize the tar file */
     tarball.finish();
     /* close the file */
-    std::fstream out("archive5.tar", std::ios::out | std::ios::binary);
+    std::fstream out("archive.tar", std::ios::out | std::ios::binary);
     if (!out.is_open())
     {
         std::cerr << "Cannot open out" << std::endl;
@@ -26,5 +26,7 @@ int main(int argc, char** argv)
     out.write(content.c_str(), content.size());
     out.close();
     /* we're done */
+    std::fstream in("archive.tar", std::ios::in | std::ios::binary);
+    tarball.readToFile("C:/Users/PC/Desktop/code/vs_main/tar/x64", in);
     return EXIT_SUCCESS;;
 }
